@@ -1,14 +1,7 @@
 # NoMorePen
-
 # GAN-Based Handwritten Thai Character Generation
 
-This repository provides a complete pipeline to train a Generative Adversarial Network (GAN) to generate handwritten Thai characters (ก-ฮ) using the KVIS TOCR dataset. The code is organized into three main stages:
-
-1. **Data Collection & Cleaning** (`data/`)
-2. **Exploratory Data Analysis (EDA)** (`notebooks/`)
-3. **Modeling, Validation & Error Analysis** (`src/modeling/`)
-
-You can run the pipeline either in Google Colab or on Kaggle Kernels.
+This repository provides a complete pipeline to train a Generative Adversarial Network (GAN) to generate handwritten Thai characters (ก-ฮ) using the KVIS TOCR dataset. The model is trained one character at a time, and the weights are saved as `.pth` files for later use. It is highly recommended to run the code in **Google Colab** or **Kaggle** for easy access to GPU resources.
 
 ---
 
@@ -17,31 +10,38 @@ You can run the pipeline either in Google Colab or on Kaggle Kernels.
 ```bash
 your-repo/
 ├── data/
-│   └── data_collection_and_cleaning.py    # จัดการโหลดและเตรียมข้อมูล
+│   └── data_collection_and_cleaning.py    # Load and prepare character-level data
 ├── notebooks/
-│   └── 01_exploratory_data_analysis.ipynb # วิเคราะห์ข้อมูลเบื้องต้น
+│   └── 01_exploratory_data_analysis.ipynb # Basic visual inspection and stats
 ├── src/
 │   └── modeling/
-│       └── train_and_evaluate.py          # สคริปต์ฝึก GAN พร้อม validation และ error logging
-├── output/                                # ผลลัพธ์: รูปตัวอย่าง และไฟล์ .pth ที่บันทึกโมเดล
-└── README.md                              # ไฟล์นี้
+│       └── train_and_evaluate.py          # GAN training and validation
+├── output/                                # Output images and saved .pth files
+└── README.md                              # This file
 ```
 
 ---
 
-## ⚙️ Prerequisites
+## ⚙️ Requirements
 
 * Python 3.8+
 * PyTorch 1.12+
 * Torchvision 0.13+
-* CUDA (optional, สำหรับ GPU)
-* Jupyter Notebook (ถ้าใช้ local)
+* CUDA GPU (optional but recommended)
+* matplotlib
+* Jupyter Notebook (for local usage)
+
+To install dependencies in Colab or Kaggle:
+
+```bash
+pip install torch torchvision matplotlib
+```
 
 ---
 
 ## 📥 Dataset
 
-ใช้ [KVIS TOCR Dataset](https://www.kvisteach.org/) โดยดาวน์โหลดไว้ในโฟลเดอร์โครงสร้าง:
+We use the [KVIS TOCR Dataset](https://www.kvisteach.org/), organized like this:
 
 ```
 /KVIS_TOCR/
@@ -51,84 +51,82 @@ your-repo/
 │   └── ...
 ├── ข/
 │   └── ...
-└── ...
+└── ฮ/
 ```
 
-แต่ละโฟลเดอร์ภายในจะเก็บภาพของตัวอักษรเดียวกัน (ก-ฮ) เพื่อให้สคริปต์เลือกเทรนทีละตัวได้ง่าย
+Each folder contains handwritten images of a single Thai character (ก-ฮ).
 
 ---
 
-## 🚀 วิธีใช้งาน บน Colab หรือ Kaggle
+## 🚀 How to Run in Colab or Kaggle
 
-### 1. เตรียมโค้ด
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/your-repo.git
 cd your-repo
 ```
 
-### 2. เตรียม Dataset
+### 2. Upload or Mount the Dataset
 
-* **Colab:**
+* **On Colab:**
 
-  1. อัปโหลดโฟลเดอร์ `KVIS_TOCR` ไปที่ Google Drive
-  2. รันเซลล์ต่อไปนี้ใน Colab:
-
-     ```python
-     from google.colab import drive
-     drive.mount('/content/drive')
-     !ln -s /content/drive/MyDrive/KVIS_TOCR /content/KVIS_TOCR
-     ```
-* **Kaggle:**
-
-  1. ไปที่ Settings ของ Kernel
-  2. เลือก `Add Data` → KVIS\_TOCR (อัปโหลดเข้าระบบ)
-  3. ในโค้ด ให้กำหนด `root_dir = '/kaggle/input/KVIS_TOCR/ก'` (หรือไดเรกทอรีที่เหมาะสม)
-
-### 3. ติดตั้ง Dependencies
-
-```bash
-pip install torch torchvision matplotlib
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+!ln -s /content/drive/MyDrive/KVIS_TOCR /content/KVIS_TOCR
 ```
 
-### 4. Data Collection & Cleaning
+Then set `root_dir = '/content/KVIS_TOCR/ก'` in your scripts.
 
-รันสคริปต์โหลดและเตรียมข้อมูล (ปรับ `root_dir` ให้เป็นโฟลเดอร์ตัวอักษรที่ต้องการ):
+* **On Kaggle:**
+  Go to *Add Data* in your Notebook settings, upload your `KVIS_TOCR` folder, and use a path like `/kaggle/input/KVIS_TOCR/ก`.
+
+### 3. (Optional) Data Collection & Cleaning
+
+You **do not need this step** if your images are already clean. Run it **only if** you want to preprocess or filter:
 
 ```bash
-python data/data_collection_and_cleaning.py
+python data/data_collection_and_cleaning.py --root_dir="/content/KVIS_TOCR/ก"
 ```
 
-### 5. Exploratory Data Analysis (EDA)
+### 4. (Optional) Exploratory Data Analysis (EDA)
 
-เปิด Jupyter Notebook เพื่อวิเคราะห์ข้อมูลเบื้องต้น:
+Run this to visualize and understand the distribution of handwriting styles:
 
 ```bash
 jupyter notebook notebooks/01_exploratory_data_analysis.ipynb
 ```
 
-### 6. Training & Validation
+You can **skip this step** if you're already confident in your data.
 
-รันฝึก GAN ทีละตัวอักษร (ปรับค่า `root_dir` ใน `train_and_evaluate.py` ให้ชี้ไปที่โฟลเดอร์ตัวอักษรนั้น)
+### 5. Train the GAN
+
+Update `root_dir` in `src/modeling/train_and_evaluate.py` to match the character folder, e.g., `root_dir = "/content/KVIS_TOCR/ก"`.
+
+Then run:
 
 ```bash
 python src/modeling/train_and_evaluate.py
 ```
 
-* **ปรับพารามิเตอร์** ในหัวไฟล์ได้แก่:
+Adjust training hyperparameters at the top of the script:
 
-  * `target_epochs`: จำนวน epoch ที่ต้องการเทรน
-  * `batch_size`: ขนาด batch
-  * `lr_g`, `lr_d`: learning rates
-  * `gen_updates`: จำนวนครั้งอัปเดต Generator ต่อ Discriminator 1 รอบ
+* `target_epochs`
+* `batch_size`
+* `lr_g`, `lr_d`
+* `gen_updates`
 
-> เมื่อสคริปต์รันเสร็จไฟล์น้ำหนักจะถูกบันทึกใน `output/` ชื่อ `generator_epoch_XXX.pth` และ `discriminator_epoch_XXX.pth`
+Trained models will be saved in `output/` as:
+
+* `generator_epoch_XXX.pth`
+* `discriminator_epoch_XXX.pth`
 
 ---
 
-## 🔍 การใช้โมเดลที่บันทึกไว้
+## 🧪 Using the Trained Generator
 
-ตัวอย่างโค้ดโหลดโมเดลและสร้างภาพตัวอย่าง:
+Example code to generate samples:
 
 ```python
 import torch
@@ -136,25 +134,19 @@ from src.modeling.train_and_evaluate import Generator
 from torchvision import utils
 import matplotlib.pyplot as plt
 
-# กำหนด device และ latent_dim ให้ตรงกับตอนฝึก
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 latent_dim = 100
 
-# สร้าง Generator
 G = Generator().to(device)
-
-# โหลด weigth ล่าสุด
-ckpt_path = 'output/generator_epoch_1000.pth'
-G.load_state_dict(torch.load(ckpt_path, map_location=device))
+G.load_state_dict(torch.load('output/generator_epoch_1000.pth', map_location=device))
 G.eval()
 
-# สุ่ม noise และสร้างภาพ
 z = torch.randn(64, latent_dim, 1, 1, device=device)
 fake_imgs = G(z).cpu()
 
-# แสดงผล
 grid = utils.make_grid(fake_imgs, nrow=8, normalize=True)
-plt.figure(figsize=(4,4)); plt.axis('off')
+plt.figure(figsize=(4,4))
+plt.axis('off')
 plt.imshow(grid.permute(1,2,0).squeeze(), cmap='gray')
 plt.show()
 ```
@@ -163,10 +155,11 @@ plt.show()
 
 ## 💡 Tips & Best Practices
 
-* **Monitor Loss:** ดูค่า D\_loss และ G\_loss ว่าลดลงตามที่คาดหรือไม่
-* **Checkpointing:** เก็บโมเดลทุก 10 epochs เพื่อ rollback เมื่อจำเป็น
-* **Data Augmentation:** ลองเพิ่ม `transforms.RandomRotation` หรือ `RandomAffine` เพื่อเพิ่มความหลากหลาย
+* Monitor `D_loss` and `G_loss` to check stability.
+* Save checkpoints every few epochs.
+* Use image augmentations (like rotation/affine) to increase robustness.
+* Train character-by-character and store `.pth` separately for each Thai letter.
 
 ---
 
-> 📌 หากมีข้อสงสัย เปิด Issue หรือส่ง Pull Request ได้เลย ยินดีรับ feedback ครับ! 🎉
+> 📌 Questions, suggestions, or contributions are welcome! Just open an Issue or Pull Request. 🎉
